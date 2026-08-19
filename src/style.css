@@ -1,0 +1,74 @@
+:root {
+  --ink: #f5eede;
+  --panel: #20181a;
+  --panel-edge: #0e0a0b;
+  --accent: #62c7f0;
+  --accent-warm: #ffd76a;
+  --accent-pink: #ff8fb1;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #0e0a0b;
+  font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+
+#app {
+  position: relative;
+}
+
+canvas {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.pixel-font {
+  font-family: 'Press Start 2P', 'Courier New', monospace;
+}
+
+/* 像素风格边框护栏（用于面板） */
+.pixel-panel {
+  background: var(--panel);
+  border: 4px solid var(--panel-edge);
+  border-radius: 0;
+  box-shadow:
+    inset 0 0 0 2px #3a2f31,
+    0 6px 0 rgba(0, 0, 0, 0.45);
+  color: var(--ink);
+}
+
+@keyframes blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.blink {
+  animation: blink 0.9s steps(1) infinite;
+}
+
+@keyframes toast-in {
+  from {
+    transform: translateY(-140%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
