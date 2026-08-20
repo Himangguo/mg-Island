@@ -37,7 +37,7 @@ export const MINIGAMES = {
   BugHunter: { title: '🐛 Bug Hunter', hint: '找出三个 Bug：CSS / JS / UI，点错了会被扣分' },
   AimChallenge: { title: '🎮 Aim Challenge', hint: '点击不断出现的目标，打进一定分数' },
   Swim: { title: '🏊 50m 自由泳', hint: '连续快速按「空格」或点画面，保持游泳直到 50m' },
-  Chord: { title: '🎸 Chord Challenge', hint: '按 C → G → Am → F 的顺序弹出和弦' },
+  Chord: { title: '🎹 旋律琴键', hint: '照谱弹出单音旋律' },
   Ollie: { title: '🛹 Ollie Challenge', hint: '按「空格」跳过石头，别被绊倒' },
   RainTrap: { title: '🧠 接雨水', hint: '拖动柱子到正确位置，让雨水被接住' },
   Fitness: { title: '💪 坚持挑战', hint: '疯狂点「打卡」，坚持到 180 天' }
@@ -179,16 +179,14 @@ export const CONTENT = {
 
   guitar: [
     { speaker: '你', say: '你抱起一把吉他。' },
-    { say: 'C → G → Am → F，连着弹下来？' },
+    { say: '就几个单音，能连成一段旋律。' },
     {
       choices: [
         {
           text: '来一段',
           do: [
             { mini: 'Chord' },
-            { speaker: '他', say: '我会照着谱弹。' },
-            { say: '但遇到难和弦……' },
-            { say: '……' },
+            { speaker: '他', say: '是不是有那么一点熟悉这个旋律？' },
             { interest: 'guitar' }
           ]
         },

@@ -259,6 +259,8 @@ export default class WorldScene extends Phaser.Scene {
   startMini(id, onSuccess, onFail) {
     gameState.minigame = { open: true, name: id }
     gameState.phase = 'minigame'
+    gameState.dialogue.open = false
+    gameState.dialogue.choices = null
     this.pendingMini = { id, onSuccess, onFail }
     this.scene.pause('World')
     this.scene.launch(id)

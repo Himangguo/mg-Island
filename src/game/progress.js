@@ -1,6 +1,7 @@
 import { gameState } from './state'
 import { eventBus, EVT } from './eventBus'
 import { FRAGMENTS, levelForCount } from './content'
+import { music } from './audio'
 
 // 授予一个姓名碎片，并计算成长等级
 export function grantFragment(id) {
@@ -35,6 +36,10 @@ const ALL_INTERESTS = ['skate', 'guitar', 'swim', 'fitness']
 export function completeInterest(key) {
   if (gameState.interests.includes(key)) return
   gameState.interests.push(key)
+  if (key === 'guitar') {
+    music.playArpeggio()
+    eventBus.emit(EVT.TOAST, { text: '♪ 通关！一段记忆里的和弦响起', kind: 'info' })
+  }
   if (ALL_INTERESTS.every((k) => gameState.interests.includes(k))) {
     grantFragment('chen_1')
   }

@@ -1,5 +1,6 @@
 import Phaser from 'phaser'
 import { eventBus, EVT } from '../eventBus'
+import { music, audioState } from '../audio'
 
 // 所有小游戏都叠加在暂停的世界之上，结束后通过事件通知 WorldScene 恢复。
 class BaseMini extends Phaser.Scene {
@@ -210,7 +211,7 @@ export class SwimScene extends BaseMini {
   }
 }
 
-// ============ 吉他 Chord Challenge ============
+// ============ 吉他 · 单音琴键 ============
 export class ChordScene extends BaseMini {
   constructor() {
     super('Chord')
@@ -218,37 +219,85 @@ export class ChordScene extends BaseMini {
 
   create() {
     this.backdrop()
-    this.quitButton()
-    this.title('CHORD CHALLENGE')
-    this.subtitle('按顺序弹出 C → G → Am → F。')
+    this.freeMode = false
+    // 进入游戏时暂停背景音乐，退出后再恢复
+    this.wasPlaying = audioState.playing
+    music.stop()
+    // 左上角按钮：通关前「退出」放弃；通关后变「离开」并结算完成
+    this.exitBtn = this.button(815, 58, 120, 36, '退出', () => this.finish(this.freeMode))
+    this.title('旋律琴键')
+    this.subtitle('照谱弹出：La Do+ Sol+ Do+ Do+ Sol La Sol+ Do+')
 
-    this.seq = ['C', 'G', 'Am', 'F']
+    // 前奏旋律（唱名，+ 表示高八度）
+    this.seq = ['La', 'Do+', 'Sol+', 'Do+', 'Do+', 'Sol', 'La', 'Sol+', 'Do+']
     this.idx = 0
-    this.target = this.title('C', 190)
+    this.target = this.txt(480, 170, `下一个音：${this.seq[0]}`, 18, '#ffd76a')
 
-    const chord = (label, x) => {
-      this.button(x, 280, 90, 60, label, () => this.hit(label))
-    }
-    chord('C', 300)
-    chord('G', 410)
-    chord('Am', 520)
-    chord('F', 630)
+    // 两排白键：上排低八度 Do~Si，下排高八度 Do+~Si+
+    const keys = ['Do', 'Re', 'Mi', 'Fa', 'Sol', 'La', 'Si']
+    const keyW = 62
+    const gap = 8
+    const totalW = keys.length * keyW + (keys.length - 1) * gap
+    const startX = 480 - totalW / 2 + keyW / 2
+    keys.forEach((name, i) => {
+      this.pianoKey(startX + i * (keyW + gap), 260, keyW, 58, name)
+    })
+    keys.forEach((name, i) => {
+      this.pianoKey(startX + i * (keyW + gap), 330, keyW, 58, name + '+')
+    })
+
+    this.feedback = null
   }
 
-  hit(label) {
-    if (label === this.seq[this.idx]) {
+  finish(success, result) {
+    // 退出游戏时恢复背景音乐（进入前本来就在播放才恢复）
+    if (this.wasPlaying && !audioState.playing) music.start()
+    super.finish(success, result)
+  }
+
+  pianoKey(x, y, w, h, name) {
+    const rect = this.add
+      .rectangle(x, y, w, h, 0xf5eede)
+      .setOrigin(0.5)
+      .setStrokeStyle(2, 0x3a2f31)
+      .setInteractive({ useHandCursor: true })
+    this.txt(x, y, name, 16, '#20181a')
+    rect.on('pointerdown', () => this.hit(name, rect))
+    rect.on('pointerover', () => rect.setFillStyle(0xffe9b0))
+    rect.on('pointerout', () => rect.setFillStyle(0xf5eede))
+  }
+
+  hit(note, rect) {
+    music.playPiano(note)
+    if (rect) {
+      rect.setFillStyle(0xffd76a)
+      this.time.delayedCall(120, () => rect.setFillStyle(0xf5eede))
+    }
+    if (this.freeMode) return
+    if (note === this.seq[this.idx]) {
       this.idx++
       if (this.idx >= this.seq.length) {
-        this.target.setText('♪')
-        this.txt(480, 400, '弹出来了！', 16, '#7fd6a0')
-        this.time.delayedCall(900, () => this.finish(true))
+        this.enterFreeMode()
         return
       }
-      this.target.setText(this.seq[this.idx])
+      this.target.setText(`下一个音：${this.seq[this.idx]}`)
     } else {
       this.cameras.main.shake(80, 0.004)
-      this.txt(480, 400, '弹错了，重来。', 13, '#ff8fb1')
+      this.flashFeedback('弹错了，再试一次。', '#ff8fb1')
     }
+  }
+
+  flashFeedback(str, color) {
+    if (this.feedback) this.feedback.destroy()
+    this.feedback = this.txt(480, 390, str, 13, color)
+  }
+
+  enterFreeMode() {
+    this.freeMode = true
+    this.target.setText('♪ 弹对啦！')
+    this.exitBtn.t.setText('离开')
+    this.txt(480, 385, '几个单音连成了一段旋律。', 13, '#7fd6a0')
+    this.txt(480, 412, '再随意按几格玩玩。', 13, '#b9b9b0')
   }
 }
 
