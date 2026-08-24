@@ -377,7 +377,48 @@ export class OllieScene extends BaseMini {
   }
 }
 
-// ============ 接雨水（LeetCode）============
+// ============ 接雨水（LeetCode 42）============
+// 每次随机生成柱子，用「前缀最值」求出每一列能接的水量并可视化。
+function trapWater(heights) {
+  const n = heights.length
+  const leftMax = new Array(n).fill(0)
+  const rightMax = new Array(n).fill(0)
+  leftMax[0] = heights[0]
+  for (let i = 1; i < n; i++) leftMax[i] = Math.max(leftMax[i - 1], heights[i])
+  rightMax[n - 1] = heights[n - 1]
+  for (let i = n - 2; i >= 0; i--) rightMax[i] = Math.max(rightMax[i + 1], heights[i])
+
+  const water = new Array(n).fill(0)
+  let total = 0
+  for (let i = 0; i < n; i++) {
+    water[i] = Math.max(0, Math.min(leftMax[i], rightMax[i]) - heights[i])
+    total += water[i]
+  }
+  return { water, total }
+}
+
+function randomHeights() {
+  const n = Phaser.Math.Between(7, 11)
+  const maxH = Phaser.Math.Between(4, 5)
+  const h = Array.from({ length: n }, () => Phaser.Math.Between(0, maxH))
+  h[0] = Phaser.Math.Between(2, maxH) // 左右两端保证有「墙」
+  h[n - 1] = Phaser.Math.Between(2, maxH)
+  return h
+}
+
+// 柱子布局参数（柱宽 / 无空隙）
+const RAIN_BASE_Y = 320
+const RAIN_UNIT = 22
+const RAIN_BW = 36
+const RAIN_GAP = 0
+
+// 返回每根柱子的水平中心坐标
+function barCenters(heights) {
+  const totalW = heights.length * RAIN_BW + (heights.length - 1) * RAIN_GAP
+  const start = 480 - totalW / 2 + RAIN_BW / 2
+  return heights.map((_, i) => start + i * (RAIN_BW + RAIN_GAP))
+}
+
 export class RainTrapScene extends BaseMini {
   constructor() {
     super('RainTrap')
@@ -387,36 +428,158 @@ export class RainTrapScene extends BaseMini {
     this.backdrop()
     this.quitButton()
     this.title('TRAP RAIN WATER')
-    this.subtitle('Hard Mode · 这些柱子能接住多少格雨水？')
+    this.subtitle('Hard Mode · 这些柱子之间能接住多少格雨水？')
 
-    const heights = [0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1]
-    const correct = 6
+    this.bars = null
+    this.waterLayer = null
+    this.answerButtons = []
+    this.feedback = null
+    this.solved = false
+
+    this.loadPuzzle()
+    this.button(650, 58, 140, 36, '换一题', () => this.loadPuzzle(), 0x2a2f31)
+  }
+
+  // 生成一套不重复的随机题目
+  loadPuzzle() {
+    let heights
+    let water
+    let total
+    do {
+      heights = randomHeights()
+      const r = trapWater(heights)
+      water = r.water
+      total = r.total
+    } while (total < 3) // 保证至少能接 3 格，题目更有意思
+
+    this.currentTotal = total
+    this.currentHeights = heights
+    this.currentWater = water
+    this.solved = false
+    if (this.feedback) {
+      this.feedback.destroy()
+      this.feedback = null
+    }
+    if (this.waterLayer) {
+      this.waterLayer.destroy()
+      this.waterLayer = null
+    }
     this.drawBars(heights)
-
-    this.button(290, 430, 120, 46, '4', () => this.answer(4, correct))
-    this.button(480, 430, 120, 46, '6', () => this.answer(6, correct))
-    this.button(670, 430, 120, 46, '8', () => this.answer(8, correct))
+    this.buildOptions(total)
   }
 
   drawBars(heights) {
-    const baseY = 320
-    const bw = 30
-    const gap = 14
-    const totalW = heights.length * bw + (heights.length - 1) * gap
-    let x = 480 - totalW / 2 + bw / 2
-    heights.forEach((h) => {
-      this.add.rectangle(x, baseY - (h * 20) / 2 + 10, bw - 6, h * 20 + 8, 0x6f5340).setOrigin(0.5)
-      x += bw + gap
+    if (this.bars) this.bars.destroy()
+    this.bars = this.add.container(0, 0)
+
+    const centers = barCenters(heights)
+    const totalW = heights.length * RAIN_BW + (heights.length - 1) * RAIN_GAP
+
+    this.drawGrid(heights, totalW)
+
+    // 地面基线
+    this.bars.add(
+      this.add.rectangle(480, RAIN_BASE_Y, totalW + 20, 5, 0x3a2f31).setOrigin(0.5, 0)
+    )
+
+    heights.forEach((h, i) => {
+      const x = centers[i]
+      // 柱子
+      if (h > 0) {
+        this.bars.add(
+          this.add.rectangle(x, RAIN_BASE_Y, RAIN_BW, h * RAIN_UNIT, 0x6f5340).setOrigin(0.5, 1)
+        )
+        this.bars.add(
+          this.add.rectangle(x, RAIN_BASE_Y - h * RAIN_UNIT, RAIN_BW, 3, 0x9a7355).setOrigin(0.5, 0)
+        )
+      }
     })
   }
 
-  answer(val, correct) {
-    if (val === correct) {
-      this.txt(480, 270, '“这道题，我曾经折腾了很久。”', 13, '#7fd6a0')
-      this.time.delayedCall(900, () => this.finish(true))
+  // 坐标网格线：横线标高度、竖线分隔列，帮玩家看清「一格」多大
+  drawGrid(heights, totalW) {
+    const n = heights.length
+    const left = 480 - totalW / 2
+    const right = 480 + totalW / 2
+    const maxUnits = Math.max(...heights) + 1 // 顶部多留一格
+    const gridColor = 0x4a3f42
+
+    // 水平网格线 + 左侧高度刻度
+    for (let k = 0; k <= maxUnits; k++) {
+      const y = RAIN_BASE_Y - k * RAIN_UNIT
+      this.bars.add(
+        this.add.rectangle((left + right) / 2, y, totalW, 1, gridColor).setOrigin(0.5, 0.5)
+      )
+      this.bars.add(
+        this.txt(left - 14, y, String(k), 11, '#8a8582').setOrigin(1, 0.5)
+      )
+    }
+
+    // 垂直网格线（列边界）
+    for (let j = 0; j <= n; j++) {
+      const x = left + j * RAIN_BW
+      this.bars.add(
+        this.add.rectangle(x, RAIN_BASE_Y - maxUnits * RAIN_UNIT, 1, maxUnits * RAIN_UNIT, gridColor).setOrigin(0.5, 0)
+      )
+    }
+  }
+
+  // 答对后揭示积水
+  revealWater() {
+    if (this.waterLayer) this.waterLayer.destroy()
+    this.waterLayer = this.add.container(0, 0)
+
+    const heights = this.currentHeights
+    const water = this.currentWater
+    const centers = barCenters(heights)
+
+    heights.forEach((h, i) => {
+      const x = centers[i]
+      if (water[i] > 0) {
+        this.waterLayer.add(
+          this.add.rectangle(x, RAIN_BASE_Y - h * RAIN_UNIT, RAIN_BW, water[i] * RAIN_UNIT, 0x3fa7d6).setOrigin(0.5, 1)
+        )
+        this.waterLayer.add(
+          this.add.rectangle(x, RAIN_BASE_Y - (h + water[i]) * RAIN_UNIT, RAIN_BW, 3, 0x74c6ea).setOrigin(0.5, 0)
+        )
+      }
+    })
+  }
+
+  buildOptions(total) {
+    this.answerButtons.forEach((b) => {
+      b.rect.destroy()
+      b.t.destroy()
+    })
+    this.answerButtons = []
+
+    // 正确答案 + 附近的干扰项，共 3 个
+    const pool = new Set([total])
+    for (const d of [-1, 1, -2, 2, -3, 3]) {
+      const v = total + d
+      if (v >= 0 && v !== total) pool.add(v)
+    }
+    const rest = Phaser.Utils.Array.Shuffle([...pool].filter((v) => v !== total))
+    const options = Phaser.Utils.Array.Shuffle([total, ...rest.slice(0, 2)])
+
+    const xs = [340, 480, 620]
+    options.forEach((val, i) => {
+      const b = this.button(xs[i], 450, 120, 46, String(val), () => this.answer(val), 0x3a2f31)
+      this.answerButtons.push(b)
+    })
+  }
+
+  answer(val) {
+    if (this.solved) return
+    if (val === this.currentTotal) {
+      this.solved = true
+      this.revealWater()
+      this.feedback = this.txt(480, 175, '答对了！看，水是这样被接住的。', 14, '#7fd6a0', '"Noto Sans SC", sans-serif')
+      this.time.delayedCall(1200, () => this.finish(true))
     } else {
       this.cameras.main.shake(80, 0.004)
-      this.txt(480, 270, '再想想？', 13, '#ff8fb1')
+      if (this.feedback) this.feedback.destroy()
+      this.feedback = this.txt(480, 175, '再想想？', 13, '#ff8fb1')
     }
   }
 }
