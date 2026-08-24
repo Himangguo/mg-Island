@@ -160,13 +160,15 @@ function buildGrid() {
     }
   }
 
-  // 栅栏（房子院子）
+  // 栅栏（房子院子，底部正对大门处留缺口，方便走进去）
   stamp(g, 7, 10, 1, 4, 'fence')
   stamp(g, 15, 10, 1, 4, 'fence')
-  stamp(g, 8, 13, 7, 1, 'fence')
+  stamp(g, 8, 13, 3, 1, 'fence') // 家下边：x=8..10
+  stamp(g, 13, 13, 2, 1, 'fence') // 家下边：x=13..14，留出 x=11,12 进门
   stamp(g, 34, 10, 1, 4, 'fence')
   stamp(g, 43, 10, 1, 4, 'fence')
-  stamp(g, 35, 13, 8, 1, 'fence')
+  stamp(g, 35, 13, 4, 1, 'fence') // 工作室下边：x=35..38
+  stamp(g, 41, 13, 2, 1, 'fence') // 工作室下边：x=41..42，留出 x=39,40 进门
 
   // 清空交互点所在 tile（保证可达、醒目）
   for (const l of LANDMARKS) {
