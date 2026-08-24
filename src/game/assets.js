@@ -312,6 +312,187 @@ function drawGem(ctx) {
   ctx.fill()
 }
 
+// ---------- 地标像素图标（16x16） ----------
+// 用色块 + 像素拼出每个地标的形状，替代纯文字标签。
+const IC = {
+  outline: '#20181a',
+  dark: '#2a2a33',
+  white: '#ffffff',
+  grey: '#a8a29e',
+  greyDark: '#7c7672',
+  red: '#ff6b57',
+  yellow: '#ffd76a',
+  blue: '#4aa8e0',
+  blueDark: '#3789c0',
+  cyan: '#62c7f0',
+  green: '#79c143',
+  greenDark: '#4b9a4e',
+  pink: '#ff8fb1',
+  wood: '#c8965a',
+  woodDark: '#8a5a3a',
+  brown: '#5b3b2a',
+  roof: '#cf6354',
+  roofDark: '#a8483c',
+  sand: '#f0dfa0'
+}
+
+function drawBedIcon(c) {
+  r(c, 2, 2, 12, 3, IC.woodDark) // 床头板
+  r(c, 2, 5, 12, 2, IC.white) // 枕头
+  r(c, 2, 7, 12, 7, IC.green) // 被子
+  for (let i = 0; i < 3; i++) r(c, 2 + i * 4, 7, 2, 7, IC.greenDark) // 被子条纹
+  r(c, 2, 14, 12, 1, IC.woodDark) // 床尾板
+  r(c, 3, 15, 2, 1, IC.dark) // 腿
+  r(c, 11, 15, 2, 1, IC.dark)
+}
+
+function drawAlbumIcon(c) {
+  r(c, 1, 1, 14, 14, IC.white) // 相纸白边
+  r(c, 2, 2, 12, 9, IC.cyan) // 天空
+  r(c, 9, 3, 3, 3, IC.yellow) // 太阳
+  r(c, 2, 7, 12, 4, IC.green) // 山丘
+  r(c, 5, 8, 4, 2, IC.greenDark) // 山阴影
+  r(c, 2, 11, 12, 4, IC.white) // 底部留白
+}
+
+function drawStoneIcon(c) {
+  r(c, 3, 5, 10, 8, IC.grey)
+  r(c, 2, 6, 12, 6, IC.grey) // 圆石
+  r(c, 3, 5, 1, 5, IC.greyDark) // 阴影
+  r(c, 3, 5, 10, 1, IC.white) // 高光
+  // 心形刻痕
+  p(c, 7, 8, IC.red); p(c, 8, 8, IC.red)
+  p(c, 6, 9, IC.red); p(c, 7, 9, IC.red); p(c, 8, 9, IC.red); p(c, 9, 9, IC.red)
+  p(c, 7, 10, IC.red); p(c, 8, 10, IC.red)
+}
+
+function drawStudioIcon(c) {
+  r(c, 2, 3, 12, 9, IC.dark) // 屏幕边框
+  r(c, 3, 4, 10, 7, IC.cyan) // 屏幕
+  r(c, 6, 5, 2, 3, IC.red) // Bug 身体
+  r(c, 9, 5, 2, 3, IC.red)
+  p(c, 8, 6, IC.dark) // 触须
+  r(c, 7, 10, 2, 2, IC.greyDark) // 底座
+  r(c, 5, 12, 6, 1, IC.greyDark)
+}
+
+function drawBoardIcon(c) {
+  r(c, 2, 3, 12, 10, IC.white) // 看板
+  r(c, 2, 3, 12, 2, IC.blue) // 标题栏
+  r(c, 3, 6, 1, 6, IC.pink) // 第一列卡片
+  r(c, 6, 6, 1, 4, IC.green)
+  r(c, 9, 6, 1, 7, IC.yellow)
+  r(c, 2, 13, 12, 1, IC.grey) // 底部
+}
+
+function drawMountainIcon(c) {
+  r(c, 2, 1, 5, 3, IC.white) // 云
+  r(c, 5, 0, 4, 2, IC.white)
+  p(c, 4, 5, IC.blue); p(c, 7, 5, IC.blue); p(c, 3, 7, IC.blue) // 雨
+  r(c, 4, 9, 8, 5, IC.green) // 山体
+  r(c, 3, 10, 10, 4, IC.green)
+  r(c, 3, 14, 10, 1, IC.green)
+  r(c, 6, 7, 4, 2, IC.white) // 雪顶
+  r(c, 7, 6, 2, 2, IC.white)
+}
+
+function drawSkateIcon(c) {
+  r(c, 2, 6, 12, 3, IC.red) // 板面
+  p(c, 1, 7, IC.red); p(c, 14, 7, IC.red) // 翘起两端
+  r(c, 4, 9, 2, 2, IC.greyDark) // 支架
+  r(c, 9, 9, 2, 2, IC.greyDark)
+  r(c, 3, 11, 3, 2, IC.dark) // 轮
+  r(c, 9, 11, 3, 2, IC.dark)
+}
+
+function drawGuitarIcon(c) {
+  r(c, 6, 0, 4, 2, IC.woodDark) // 琴头
+  r(c, 7, 2, 2, 6, IC.woodDark) // 琴颈
+  r(c, 4, 8, 8, 3, IC.wood) // 琴身上
+  r(c, 5, 11, 6, 2, IC.wood) // 收腰
+  r(c, 6, 13, 4, 2, IC.wood) // 琴身下
+  r(c, 7, 9, 2, 2, IC.dark) // 音孔
+  p(c, 8, 6, IC.white); p(c, 8, 7, IC.white) // 弦
+}
+
+function drawSwimIcon(c) {
+  r(c, 2, 6, 5, 6, IC.cyan) // 左镜片
+  r(c, 9, 6, 5, 6, IC.cyan) // 右镜片
+  r(c, 2, 6, 5, 1, IC.blueDark) // 镜框
+  r(c, 9, 6, 5, 1, IC.blueDark)
+  r(c, 7, 7, 2, 4, IC.greyDark) // 鼻梁
+  r(c, 1, 8, 1, 2, IC.blueDark) // 镜带
+  r(c, 14, 8, 1, 2, IC.blueDark)
+  r(c, 3, 7, 1, 2, IC.white) // 高光
+  r(c, 10, 7, 1, 2, IC.white)
+}
+
+function drawFitnessIcon(c) {
+  r(c, 1, 5, 3, 6, IC.grey) // 左配重
+  r(c, 1, 5, 3, 1, IC.greyDark)
+  r(c, 12, 5, 3, 6, IC.grey) // 右配重
+  r(c, 12, 12, 3, 1, IC.greyDark)
+  r(c, 4, 7, 8, 2, IC.greyDark) // 横杆
+}
+
+function drawArcadeIcon(c) {
+  r(c, 2, 6, 12, 5, IC.dark) // 机身
+  r(c, 2, 6, 3, 5, IC.greyDark) // 左握把
+  r(c, 11, 6, 3, 5, IC.greyDark) // 右握把
+  p(c, 4, 8, IC.white); r(c, 3, 9, 3, 1, IC.white) // 十字键
+  p(c, 5, 9, IC.white)
+  p(c, 10, 8, IC.red); p(c, 11, 9, IC.yellow) // 按钮
+}
+
+function drawYunnanIcon(c) {
+  r(c, 6, 3, 4, 2, IC.greyDark) // 提手
+  r(c, 3, 5, 10, 8, IC.wood) // 箱体
+  r(c, 3, 5, 10, 2, IC.woodDark) // 顶盖
+  r(c, 8, 7, 1, 6, IC.woodDark) // 拉链
+  r(c, 3, 12, 10, 1, IC.woodDark)
+  p(c, 5, 9, IC.yellow) // 锁
+}
+
+function drawRecordIcon(c) {
+  r(c, 3, 3, 10, 10, IC.dark) // 黑胶外圈
+  r(c, 4, 2, 8, 12, IC.dark)
+  r(c, 2, 4, 12, 8, IC.dark)
+  r(c, 5, 5, 6, 6, '#3a3f56') // 纹理反光
+  r(c, 6, 6, 4, 4, IC.yellow) // 中心标签
+  p(c, 7, 7, IC.red); p(c, 8, 8, IC.red) // 中心孔
+}
+
+function drawLibraryIcon(c) {
+  r(c, 4, 3, 8, 11, IC.red) // 封面
+  r(c, 4, 3, 1, 11, IC.roofDark) // 书脊
+  r(c, 5, 5, 6, 3, IC.white) // 内页
+  r(c, 5, 9, 6, 2, IC.white)
+  r(c, 11, 3, 1, 11, IC.sand) // 书口纸边
+  r(c, 6, 12, 1, 2, IC.yellow) // 书签带
+}
+
+// key 顺序即帧序（生成图集与引用时保持一致）
+const LANDMARK_ICONS = {
+  home_bed: drawBedIcon,
+  home_album: drawAlbumIcon,
+  ei_stone: drawStoneIcon,
+  studio: drawStudioIcon,
+  studio_tech: drawBoardIcon,
+  rain_mountain: drawMountainIcon,
+  skate: drawSkateIcon,
+  guitar: drawGuitarIcon,
+  swim: drawSwimIcon,
+  fitness: drawFitnessIcon,
+  arcade: drawArcadeIcon,
+  yunnan: drawYunnanIcon,
+  record: drawRecordIcon,
+  library: drawLibraryIcon
+}
+
+export const LANDMARK_ICON_FRAME = Object.fromEntries(
+  Object.keys(LANDMARK_ICONS).map((k, i) => [k, i])
+)
+
 // ------------- 统一入口 -------------
 export function generateAssets(scene) {
   if (scene.textures.exists('tiles')) return
@@ -356,6 +537,14 @@ export function generateAssets(scene) {
   const gemC = makeCanvas(16, 16)
   drawGem(ctx2d(gemC))
   scene.textures.addCanvas('gem', gemC)
+
+  // 地标像素图标图集（帧序与 LANDMARK_ICON_FRAME 一致）
+  const iconFrames = Object.keys(LANDMARK_ICONS).map((k) => {
+    const c = makeCanvas(16, 16)
+    LANDMARK_ICONS[k](ctx2d(c))
+    return c
+  })
+  addSheet(scene, 'landmarks', iconFrames, 16, 16)
 }
 
 function addSheet(scene, key, canvases, w, h) {

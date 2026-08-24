@@ -1,26 +1,10 @@
 import Phaser from 'phaser'
-import { createIsland, TILE_SIZE, MAP_W, MAP_H, tileToWorld, LANDMARKS, LANDMARK_LABELS } from '../maps'
+import { createIsland, TILE_SIZE, MAP_W, MAP_H, tileToWorld, LANDMARKS } from '../maps'
+import { LANDMARK_ICON_FRAME } from '../assets'
 import { CONTENT } from '../content'
 import { DialogRunner } from '../DialogRunner'
 import { eventBus, EVT } from '../eventBus'
 import { gameState } from '../state'
-
-const GEM_COLORS = {
-  home_bed: 0xffd76a,
-  home_album: 0xffd76a,
-  ei_stone: 0x9fd8ef,
-  studio: 0x62c7f0,
-  studio_tech: 0x62c7f0,
-  rain_mountain: 0xb0c4ff,
-  skate: 0xff8fb1,
-  guitar: 0xffb36a,
-  swim: 0x3fa7d6,
-  fitness: 0xff8fb1,
-  arcade: 0xff6b57,
-  yunnan: 0xffd76a,
-  record: 0xc79bff,
-  library: 0x7fd6a0
-}
 
 const IDLE_FRAME = { down: 0, up: 2, side: 4 }
 
@@ -100,29 +84,19 @@ export default class WorldScene extends Phaser.Scene {
   }
 
   buildInteractables() {
-    // 宝石（内容交互点）
+    // 像素图标（内容交互点）
     for (const lm of LANDMARKS) {
       const pos = tileToWorld(lm.tx, lm.ty)
-      const gem = this.add.sprite(pos.x, pos.y, 'gem').setTint(GEM_COLORS[lm.key] || 0xffffff)
-      gem.setDepth(3)
-      const label = this.add
-        .text(pos.x, pos.y - 16, LANDMARK_LABELS[lm.key] || lm.key, {
-          fontFamily: '"Noto Sans SC", sans-serif',
-          fontSize: '9px',
-          color: '#ffe8b0'
-        })
-        .setOrigin(0.5, 1)
-        .setStroke('#20181a', 3)
-        .setDepth(4)
-      this.tweens.add({ targets: gem, y: pos.y - 2, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.inOut' })
+      const icon = this.add.sprite(pos.x, pos.y, 'landmarks', LANDMARK_ICON_FRAME[lm.key])
+      icon.setDepth(3)
+      this.tweens.add({ targets: icon, y: pos.y - 2, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.inOut' })
       this.interactables.push({
         key: lm.key,
         dialogKey: lm.key,
         kind: 'gem',
         x: pos.x,
         y: pos.y,
-        sprite: gem,
-        label
+        sprite: icon
       })
     }
 
