@@ -3,10 +3,20 @@ import { eventBus, EVT } from './eventBus'
 import { FRAGMENTS, levelForCount } from './content'
 import { music } from './audio'
 
+// 根据已收集的碎片，把三个字的部件拼到 HUD 的名字提示里
+export function updateNameHint() {
+  const parts = [[], [], []]
+  for (const f of FRAGMENTS) {
+    if (gameState.fragments.includes(f.id)) parts[f.charIndex].push(f.glyph)
+  }
+  gameState.nameHint = parts.map((p) => (p.length ? p.join('') : '？'))
+}
+
 // 授予一个姓名碎片，并计算成长等级
 export function grantFragment(id) {
   if (gameState.fragments.includes(id)) return false
   gameState.fragments.push(id)
+  updateNameHint()
   const frag = FRAGMENTS.find((f) => f.id === id)
   eventBus.emit(EVT.FRAGMENT_GET, frag)
   recalcLevel()

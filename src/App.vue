@@ -45,9 +45,9 @@ onMounted(() => {
   )
 
   offs.push(
-    eventBus.on(EVT.FRAGMENT_GET, () => {
+    eventBus.on(EVT.FRAGMENT_GET, (frag) => {
       eventBus.emit(EVT.TOAST, {
-        text: `获得姓名碎片（${gameState.fragments.length}/${gameState.totalFragments}）`,
+        text: `获得笔画「${frag.glyph}」（${gameState.fragments.length}/${gameState.totalFragments}）`,
         kind: 'fragment'
       })
     })

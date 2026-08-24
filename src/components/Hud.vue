@@ -88,12 +88,14 @@ function toggleMusic() {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
+  min-width: 26px;
   height: 30px;
+  padding: 0 4px;
   background: #0e0a0b;
   border: 2px solid #3a2f31;
   color: var(--accent-warm);
-  font-size: 16px;
+  font-size: 14px;
+  letter-spacing: 1px;
 }
 
 .frag {

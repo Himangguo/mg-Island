@@ -5,15 +5,15 @@ export const TOTAL_FRAGMENTS = 9
 // 三个字「周 学 辰」，各有 3 个碎片。charIndex 0/1/2。
 // 玩家只见进度，永远看不到真正的字，直到最终揭晓。
 export const FRAGMENTS = [
-  { id: 'zhou_1', charIndex: 0, label: '认识' },
-  { id: 'zhou_2', charIndex: 0, label: '生活' },
-  { id: 'zhou_3', charIndex: 0, label: '性格' },
-  { id: 'xue_1', charIndex: 1, label: '工作' },
-  { id: 'xue_2', charIndex: 1, label: '算法' },
-  { id: 'xue_3', charIndex: 1, label: '技术' },
-  { id: 'chen_1', charIndex: 2, label: '兴趣' },
-  { id: 'chen_2', charIndex: 2, label: '游戏' },
-  { id: 'chen_3', charIndex: 2, label: '旅行' }
+  { id: 'zhou_1', charIndex: 0, label: '认识', glyph: '冂' },
+  { id: 'zhou_2', charIndex: 0, label: '生活', glyph: '土' },
+  { id: 'zhou_3', charIndex: 0, label: '性格', glyph: '口' },
+  { id: 'xue_1', charIndex: 1, label: '工作', glyph: '⺍' },
+  { id: 'xue_2', charIndex: 1, label: '算法', glyph: '冖' },
+  { id: 'xue_3', charIndex: 1, label: '技术', glyph: '子' },
+  { id: 'chen_1', charIndex: 2, label: '兴趣', glyph: '厂' },
+  { id: 'chen_2', charIndex: 2, label: '游戏', glyph: '二' },
+  { id: 'chen_3', charIndex: 2, label: '旅行', glyph: '衣' }
 ]
 
 // 认识度等级：随着收集的碎片数量成长

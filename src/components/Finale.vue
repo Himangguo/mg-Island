@@ -6,9 +6,7 @@
         <template v-if="!revealed">
           <div class="big">WHO AM I ?</div>
           <div class="boxes">
-            <span class="box">？</span>
-            <span class="box">？</span>
-            <span class="box">？</span>
+            <span v-for="(n, i) in gameState.nameHint" :key="i" class="box">{{ n }}</span>
           </div>
           <p v-if="error" class="error">再想想？他就在这座岛的某个角落。</p>
           <form class="form" @submit.prevent="check">
@@ -21,7 +19,7 @@
             />
             <button class="btn" type="submit" :disabled="busy">确认</button>
           </form>
-          <p class="tip">提示：三个字，藏在九个姓名碎片里。</p>
+          <p class="tip">提示：上面三组就是九个颗粒拼出的部件，把它们组成三个字。</p>
         </template>
         <template v-else>
           <p v-for="(line, i) in revealLines" :key="i" class="line" :class="{ show: i < revealStep }">
@@ -162,12 +160,14 @@ onBeforeUnmount(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 54px;
-  height: 62px;
+  min-width: 68px;
+  min-height: 62px;
+  padding: 0 8px;
   background: #0e0a0b;
   border: 3px solid #3a2f31;
   color: var(--accent-warm);
-  font-size: 30px;
+  font-size: 24px;
+  letter-spacing: 2px;
 }
 
 .error {
