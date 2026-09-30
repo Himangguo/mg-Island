@@ -98,14 +98,14 @@ export default class WorldScene extends Phaser.Scene {
     this.pendingMini = null
 
     // 监听小游戏结束
-    eventBus.on(EVT.MINIGAME_DONE, ({ id, success }) => {
+    eventBus.on(EVT.MINIGAME_DONE, ({ id, success, result }) => {
       if (!this.pendingMini) return
       const p = this.pendingMini
       this.pendingMini = null
       this.scene.resume('World')
       gameState.minigame.open = false
       gameState.phase = 'playing'
-      if (success) p.onSuccess()
+      if (success) p.onSuccess(result)
       else p.onFail()
     })
 
@@ -124,16 +124,30 @@ export default class WorldScene extends Phaser.Scene {
     // 像素图标（内容交互点）
     for (const lm of LANDMARKS) {
       const pos = tileToWorld(lm.tx, lm.ty)
-      const icon = this.add.sprite(pos.x, pos.y, 'landmarks', LANDMARK_ICON_FRAME[lm.key])
-      icon.setDepth(3)
-      this.tweens.add({ targets: icon, y: pos.y - 2, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.inOut' })
+      const explored = gameState.exploredLandmarks.includes(lm.key)
+      const icon = this.add.sprite(0, 0, 'landmarks', LANDMARK_ICON_FRAME[lm.key])
+      const marker = this.add.container(6, -6)
+      const badge = this.add.circle(0, 0, 4.5, 0xffd36a).setStrokeStyle(1, 0x20181a)
+      const check = this.add.graphics()
+      check.lineStyle(1.5, 0x20181a, 1)
+      check.beginPath()
+      check.moveTo(-2, 0)
+      check.lineTo(-0.5, 1.5)
+      check.lineTo(2, -2)
+      check.strokePath()
+      marker.add([badge, check])
+      marker.setVisible(explored)
+
+      const visual = this.add.container(pos.x, pos.y, [icon, marker]).setDepth(3)
+      this.tweens.add({ targets: visual, y: pos.y - 2, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.inOut' })
       this.interactables.push({
         key: lm.key,
         dialogKey: lm.key,
         kind: 'gem',
         x: pos.x,
         y: pos.y,
-        sprite: icon
+        sprite: icon,
+        marker
       })
     }
 
@@ -204,7 +218,7 @@ export default class WorldScene extends Phaser.Scene {
       if (!this.poolIntroShown) {
         this.poolIntroShown = true
         eventBus.emit(EVT.TOAST, {
-          text: '浅水区可以自由游动，找到游泳镜按 E 开始 50 米挑战。',
+          text: '浅水区可以自由游动，找到游泳镜按 E 开始挑战；海面右侧似乎漂着什么。',
           kind: 'info'
         })
       }
@@ -316,6 +330,7 @@ export default class WorldScene extends Phaser.Scene {
   handleInteract(it) {
     if (it.kind === 'gem' && !gameState.exploredLandmarks.includes(it.key)) {
       gameState.exploredLandmarks.push(it.key)
+      it.marker?.setVisible(true)
     }
     if (it.kind === 'me' && gameState.fragments.length >= gameState.totalFragments) {
       gameState.phase = 'reveal'

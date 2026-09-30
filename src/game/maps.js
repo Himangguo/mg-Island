@@ -53,6 +53,7 @@ export const LANDMARKS = [
   { key: 'skate', tx: 13, ty: 1 },
   { key: 'guitar', tx: 20, ty: 1 },
   { key: 'swim', tx: 5, ty: 30 },
+  { key: 'water_note', tx: 40, ty: 30 },
   { key: 'fitness', tx: 30, ty: 20 },
   { key: 'arcade', tx: 8, ty: 22 },
   { key: 'yunnan', tx: 43, ty: 26 },
@@ -71,6 +72,7 @@ export const LANDMARK_LABELS = {
   skate: '滑板',
   guitar: '吉他',
   swim: '游泳镜',
+  water_note: '漂流瓶',
   fitness: '健身 · 年卡',
   arcade: '游戏厅 · 无畏契约',
   yunnan: '云南 · 旅行',
@@ -106,6 +108,7 @@ function seeded(seed) {
 function buildGrid() {
   const g = emptyGrid()
   const rand = seeded(20260819)
+  const landmarkTiles = new Set(LANDMARKS.map(({ tx, ty }) => `${tx},${ty}`))
 
   // 稀疏草地细节
   for (let y = 0; y < MAP_H; y++) {
@@ -145,7 +148,7 @@ function buildGrid() {
   for (let i = 0; i < 70; i++) {
     const x = Math.floor(rand() * MAP_W)
     const y = Math.floor(rand() * 16) // 上半部
-    if (g[y][x] === 'grass') treeSpots.push([x, y])
+    if (g[y][x] === 'grass' && !landmarkTiles.has(`${x},${y}`)) treeSpots.push([x, y])
   }
   treeSpots.forEach(([x, y]) => (g[y][x] = 'tree'))
 
@@ -153,7 +156,7 @@ function buildGrid() {
   for (let i = 0; i < 26; i++) {
     const x = Math.floor(rand() * MAP_W)
     const y = Math.floor(rand() * MAP_H)
-    if (g[y][x] === 'grass') {
+    if (g[y][x] === 'grass' && !landmarkTiles.has(`${x},${y}`)) {
       const roll = rand()
       g[y][x] = roll < 0.4 ? 'bush' : roll < 0.7 ? 'stone' : 'flower'
     }
@@ -168,12 +171,6 @@ function buildGrid() {
   stamp(g, 43, 10, 1, 4, 'fence')
   stamp(g, 35, 13, 4, 1, 'fence') // 工作室下边：x=35..38
   stamp(g, 41, 13, 2, 1, 'fence') // 工作室下边：x=41..42，留出 x=39,40 进门
-
-  // 清空交互点所在 tile（保证可达、醒目）
-  for (const l of LANDMARKS) {
-    if (l.key === 'swim') continue // 游泳镜浮在浅水上，保留水面外观
-    stamp(g, l.tx, l.ty, 1, 1, 'path')
-  }
 
   return g
 }

@@ -117,8 +117,8 @@ export class AimChallengeScene extends BaseMini {
     this.subtitle('点击目标，命中 8 个即可通关。')
 
     this.hits = 0
-    this.clicks = 0
-    this.timeLeft = 15
+    this.duration = 15
+    this.timeLeft = this.duration
     this.running = true
     this.hud = this.txt(480, 420, '命中 0 / 8    剩余 15s', 15, '#9fd8ef')
 
@@ -147,7 +147,7 @@ export class AimChallengeScene extends BaseMini {
     const t = this.add.circle(x, y, 16, 0xff6b57).setInteractive({ useHandCursor: true })
     this.tweens.add({ targets: t, scale: { from: 1.3, to: 0.9 }, duration: 500, yoyo: true, ease: 'Sine.inOut' })
     t.on('pointerdown', () => {
-      this.clicks++
+      if (!this.running) return
       this.hits++
       this.updateHud()
       t.destroy()
@@ -160,9 +160,11 @@ export class AimChallengeScene extends BaseMini {
 
   win() {
     this.running = false
-    const acc = Math.round((this.hits / Math.max(this.clicks, 1)) * 100)
-    this.txt(480, 265, `Accuracy: ${acc}%`, 18, '#7fd6a0')
-    this.time.delayedCall(900, () => this.finish(true, { accuracy: acc }))
+    const elapsed = this.duration - this.timeLeft
+    const rank = elapsed <= 5 ? 'fast' : elapsed <= 10 ? 'steady' : 'clutch'
+    const rankLabel = { fast: '反应飞快', steady: '稳中有序', clutch: '压线通关' }[rank]
+    this.txt(480, 265, `${elapsed} 秒通关 · ${rankLabel}`, 17, '#7fd6a0', '"Noto Sans SC", sans-serif')
+    this.time.delayedCall(900, () => this.finish(true, { rank, elapsed }))
   }
 
   timeUp() {

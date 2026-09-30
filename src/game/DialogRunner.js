@@ -10,14 +10,23 @@ export class DialogRunner {
     this.nodes = []
     this.i = 0
     this.currentSpeaker = ''
+    this.miniResult = null
   }
 
   run(id) {
     const script = this.scene.content[id]
     if (!script) return
-    this.nodes = [...script]
+    this.nodes = script.map((node) => {
+      if (!node.sayByProfile) return node
+      const text =
+        node.sayByProfile[gameState.profile.personalityRoute] ||
+        node.sayByProfile.default ||
+        node.say
+      return { ...node, say: text }
+    })
     this.i = 0
     this.currentSpeaker = ''
+    this.miniResult = null
     this.active = true
     gameState.phase = 'playing'
     this.step()
@@ -42,6 +51,18 @@ export class DialogRunner {
     if (!this.active) return
     while (this.i < this.nodes.length) {
       const node = this.nodes[this.i++]
+
+      if (node.sayByMiniResult) {
+        const text =
+          node.sayByMiniResult[this.miniResult?.rank] ||
+          node.sayByMiniResult.default ||
+          node.say
+        if (text != null) {
+          if (node.speaker) this.currentSpeaker = node.speaker
+          this._say(text)
+          return
+        }
+      }
 
       if (node.say != null) {
         if (node.speaker) this.currentSpeaker = node.speaker
@@ -122,7 +143,14 @@ export class DialogRunner {
 
   _mini(id) {
     // 暂停世界，拉起小游戏；成功后继续脚本
-    this.scene.startMini(id, () => this.step(), () => this.abort())
+    this.scene.startMini(
+      id,
+      (result) => {
+        this.miniResult = result || null
+        this.step()
+      },
+      () => this.abort()
+    )
   }
 
   _toast(text) {

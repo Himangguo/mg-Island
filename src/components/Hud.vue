@@ -20,6 +20,9 @@
       <div class="frag">
         姓名碎片 {{ gameState.fragments.length }} / {{ gameState.totalFragments }}
       </div>
+      <div class="exploration">
+        地点探索 {{ gameState.exploredLandmarks.length }} / {{ LANDMARKS.length }}
+      </div>
       <div class="pips">
         <span
           v-for="i in gameState.totalFragments"
@@ -41,6 +44,7 @@
 <script setup>
 import { gameState } from '../game/state'
 import { music, audioState } from '../game/audio'
+import { LANDMARKS } from '../game/maps'
 
 function toggleMusic() {
   music.toggleMute()
@@ -138,6 +142,12 @@ function openJournal() {
   font-size: 12px;
   color: #cfcfc6;
   margin-bottom: 6px;
+}
+
+.exploration {
+  margin: -2px 0 6px;
+  color: #d9bd83;
+  font-size: 11px;
 }
 
 .pips {

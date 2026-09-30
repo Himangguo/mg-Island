@@ -147,7 +147,14 @@ export const CONTENT = {
   ],
 
   home_cat: [
-    { speaker: '豆泡', say: '喵。' },
+    {
+      speaker: '豆泡',
+      say: '喵。',
+      sayByProfile: {
+        social: '喵！（上次你主动和他聊起来，我都看见啦。）',
+        reserved: '喵。（上次你安静观察的样子，我也记得。）'
+      }
+    },
     {
       choices: [
         {
@@ -318,6 +325,12 @@ export const CONTENT = {
     }
   ],
 
+  water_note: [
+    { speaker: '你', say: '海面上漂着一只封好的小瓶子。' },
+    { speaker: '你', say: '瓶子里有张便签：游到这里，算不算把边界变成了路？' },
+    { speaker: '你', say: '或许对他来说，游泳不只是完成 50 米，也是继续探索的一种方式。' }
+  ],
+
   fitness: [
     { speaker: '你', say: '一张健身房的年卡。' },
     { say: 'Day 1 … Day 2 … Day 3 ……' },
@@ -348,7 +361,15 @@ export const CONTENT = {
           text: '开一局',
           do: [
             { mini: 'AimChallenge' },
-            { speaker: '他', say: '还行。' },
+            {
+              speaker: '他',
+              sayByMiniResult: {
+                fast: '这么快就打完了？反应挺快嘛。',
+                steady: '节奏挺稳的，准星没乱跑。',
+                clutch: '最后几秒才打完，刚才还真替你捏把汗。',
+                default: '还行。'
+              }
+            },
             { say: '别看了，我平时没这么菜。' },
             { grant: 'chen_2' }
           ]
