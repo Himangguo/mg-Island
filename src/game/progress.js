@@ -42,14 +42,21 @@ export function recalcLevel() {
 
 // 兴趣森林：完成 4 项后授予「辰」的碎片
 const ALL_INTERESTS = ['skate', 'guitar', 'swim', 'fitness']
+const INTEREST_LABELS = {
+  skate: '滑板',
+  guitar: '吉他',
+  swim: '游泳',
+  fitness: '健身'
+}
 
 export function completeInterest(key) {
   if (gameState.interests.includes(key)) return
   gameState.interests.push(key)
-  if (key === 'guitar') {
-    music.playArpeggio()
-    eventBus.emit(EVT.TOAST, { text: '♪ 通关！一段记忆里的和弦响起', kind: 'info' })
-  }
+  if (key === 'guitar') music.playArpeggio()
+  eventBus.emit(EVT.TOAST, {
+    text: `完成「${INTEREST_LABELS[key] || key}」体验（${gameState.interests.length}/${ALL_INTERESTS.length}）`,
+    kind: 'info'
+  })
   if (ALL_INTERESTS.every((k) => gameState.interests.includes(k))) {
     grantFragment('chen_1')
   }

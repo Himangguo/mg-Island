@@ -3,6 +3,14 @@
     <div class="top-left pixel-panel">
       <div class="lv">{{ gameState.level }}</div>
       <div class="lv-label">{{ gameState.levelLabel }}</div>
+      <button
+        class="journal-btn"
+        type="button"
+        :disabled="gameState.dialogue.open || gameState.album.open"
+        @click="openJournal"
+      >
+        发现手记 · {{ gameState.fragments.length }}/{{ gameState.totalFragments }}
+      </button>
     </div>
 
     <div class="top-right pixel-panel">
@@ -37,6 +45,12 @@ import { music, audioState } from '../game/audio'
 function toggleMusic() {
   music.toggleMute()
 }
+
+function openJournal() {
+  if (gameState.dialogue.open || gameState.album.open) return
+  gameState.journal.open = true
+  gameState.phase = 'journal'
+}
 </script>
 
 <style scoped>
@@ -67,6 +81,28 @@ function toggleMusic() {
 .lv-label {
   font-size: 12px;
   color: #cfcfc6;
+}
+
+.journal-btn {
+  margin-top: 8px;
+  padding: 6px 8px;
+  border: 1px solid #57483a;
+  color: var(--accent-warm);
+  background: #0e0a0b;
+  font-size: 11px;
+  text-align: left;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.journal-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--ink);
+}
+
+.journal-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 .top-right {

@@ -25,7 +25,11 @@ class EventBus {
 
   emit(event, payload) {
     const set = this._handlers.get(event)
-    if (set) set.forEach((fn) => fn(payload))
+    if (set) {
+      for (const fn of [...set]) {
+        if (set.has(fn)) fn(payload)
+      }
+    }
   }
 }
 
@@ -40,6 +44,8 @@ export const EVT = {
   DIALOGUE_NEXT: 'dialogue:next',
   DIALOGUE_CLOSE: 'dialogue:close',
   DIALOGUE_CHOICE: 'dialogue:choice',
+  ALBUM_OPEN: 'album:open',
+  ALBUM_CLOSE: 'album:close',
 
   SET_CHOICES: 'ui:set-choices',
   CLEAR_CHOICES: 'ui:clear-choices',

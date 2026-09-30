@@ -5,15 +5,78 @@ export const TOTAL_FRAGMENTS = 9
 // 三个字「周 学 辰」，各有 3 个碎片。charIndex 0/1/2。
 // 玩家只见进度，永远看不到真正的字，直到最终揭晓。
 export const FRAGMENTS = [
-  { id: 'zhou_1', charIndex: 0, label: '认识', glyph: '冂' },
-  { id: 'zhou_2', charIndex: 0, label: '生活', glyph: '土' },
-  { id: 'zhou_3', charIndex: 0, label: '性格', glyph: '口' },
-  { id: 'xue_1', charIndex: 1, label: '工作', glyph: '⺍' },
-  { id: 'xue_2', charIndex: 1, label: '算法', glyph: '冖' },
-  { id: 'xue_3', charIndex: 1, label: '技术', glyph: '子' },
-  { id: 'chen_1', charIndex: 2, label: '兴趣', glyph: '厂' },
-  { id: 'chen_2', charIndex: 2, label: '游戏', glyph: '二' },
-  { id: 'chen_3', charIndex: 2, label: '旅行', glyph: '衣' }
+  {
+    id: 'zhou_1',
+    charIndex: 0,
+    label: '认识',
+    glyph: '冂',
+    place: '小岛中央',
+    insight: '他没有急着报上姓名，更希望你沿着岛上的线索，慢慢认识真实的他。'
+  },
+  {
+    id: 'zhou_2',
+    charIndex: 0,
+    label: '生活',
+    glyph: '土',
+    place: '家 · 床边',
+    insight: '豆泡是一只 4 岁的银渐层，脾气温和，每天晚上都陪他一起睡。'
+  },
+  {
+    id: 'zhou_3',
+    charIndex: 0,
+    label: '性格',
+    glyph: '口',
+    place: '性格石',
+    insight: '面对陌生人时他习惯先观察；和聊得来的人在一起，也会变得主动外向。'
+  },
+  {
+    id: 'xue_1',
+    charIndex: 1,
+    label: '工作',
+    glyph: '⺍',
+    place: '工作室',
+    insight: '他是一名前端工程师，日常工作离不开代码、键盘，还有时不时冒出来的 Bug。'
+  },
+  {
+    id: 'xue_2',
+    charIndex: 1,
+    label: '算法',
+    glyph: '冖',
+    place: '算法山',
+    insight: '他刷过 LeetCode，也曾经为了「接雨水」这道题认真琢磨很久。'
+  },
+  {
+    id: 'xue_3',
+    charIndex: 1,
+    label: '技术',
+    glyph: '子',
+    place: '技术看板',
+    insight: 'HTML、CSS、JavaScript、Vue、Phaser 都出现在他的清单里；他对前端这件事挺较真。'
+  },
+  {
+    id: 'chen_1',
+    charIndex: 2,
+    label: '兴趣',
+    glyph: '厂',
+    place: '兴趣森林',
+    insight: '滑板、吉他、游泳、健身，他愿意给不同的兴趣一次上手试试的机会。'
+  },
+  {
+    id: 'chen_2',
+    charIndex: 2,
+    label: '游戏',
+    glyph: '二',
+    place: '游戏厅',
+    insight: '他平时玩无畏契约。刚才这局的发挥嘛……他说自己平时没这么菜。'
+  },
+  {
+    id: 'chen_3',
+    charIndex: 2,
+    label: '旅行',
+    glyph: '衣',
+    place: '云南巴士',
+    insight: '第一次跟团旅行去了云南；这段经历让他对「跟团游」印象格外深刻。'
+  }
 ]
 
 // 认识度等级：随着收集的碎片数量成长
@@ -79,10 +142,49 @@ export const CONTENT = {
   home_album: [
     { speaker: '你', say: '你翻开相册。' },
     { say: '里面是一些日常的、安静的片段。' },
-    { say: '没有刻意的摆拍，都是些「当时的自己」。' }
+    { say: '没有刻意的摆拍，都是些「当时的自己」。' },
+    { album: 'home_album' }
   ],
 
-  home_cat: [{ speaker: '豆泡', say: '喵。' }],
+  home_cat: [
+    { speaker: '豆泡', say: '喵。' },
+    {
+      choices: [
+        {
+          text: '问问它眼中的主人',
+          do: [
+            { speaker: '你', say: '豆泡，你觉得你的主人怎么样？' },
+            { speaker: '豆泡', say: '喵。' },
+            { say: '翻译一下：每天晚上都会陪我一起睡，这点还不错。' }
+          ]
+        },
+        {
+          text: '摸摸它的脑袋',
+          do: [
+            { speaker: '你', say: '今天也来打招呼啦。' },
+            { speaker: '豆泡', say: '呼噜……（把脑袋凑了过来）' },
+            { say: '豆泡脾气很好，舒服地眯起眼睛，像是把你也当成了熟人。' }
+          ]
+        },
+        {
+          text: '问问它几岁了',
+          do: [
+            { speaker: '你', say: '听说你已经四岁了？' },
+            { speaker: '豆泡', say: '喵！（四岁，正是最会享受生活的时候。）' },
+            { say: '银渐层豆泡，对自己的猫生安排显然很满意。' }
+          ]
+        },
+        {
+          text: '跟着豆泡去探险',
+          do: [
+            { speaker: '豆泡', say: '喵！（跟我来。）' },
+            { say: '豆泡竖起尾巴，朝着一个还没去过的地方跑去。' },
+            { guide: true }
+          ]
+        }
+      ]
+    }
+  ],
 
   ei_stone: [
     { speaker: '你', say: '路边立着一块小石头，刻着一行字。' },
@@ -91,6 +193,7 @@ export const CONTENT = {
       choices: [
         {
           text: '主动攀谈（外向）',
+          remember: { key: 'personalityRoute', value: 'social' },
           do: [
             { say: '（石头微微发亮）' },
             { speaker: '他', say: '和聊得来的人在一起，我其实挺 E 的。' }
@@ -98,6 +201,7 @@ export const CONTENT = {
         },
         {
           text: '默默观察（内向）',
+          remember: { key: 'personalityRoute', value: 'reserved' },
           do: [
             { say: '在陌生人面前，我更习惯先观察。' },
             { say: '话少，不代表冷漠。' }

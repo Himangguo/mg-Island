@@ -2,7 +2,7 @@ import { reactive } from 'vue'
 
 // 游戏全局状态（Phaser 与 Vue 共享这一份响应式数据）
 export const gameState = reactive({
-  phase: 'title', // title | playing | minigame | reveal | ending
+  phase: 'title', // title | playing | journal | album | minigame | reveal | ending
 
   // 认识度成长
   level: 1,
@@ -17,6 +17,14 @@ export const gameState = reactive({
   // 兴趣森林：滑板 / 吉他 / 游泳 / 健身 是否已完成
   interests: [],
 
+  // 已经实际互动过的地标，用于豆泡选择探索目标
+  exploredLandmarks: [],
+
+  // 玩家选择后，留下会影响后续手记的个人线索
+  profile: {
+    personalityRoute: null
+  },
+
   // 对话
   dialogue: {
     open: false,
@@ -24,6 +32,16 @@ export const gameState = reactive({
     text: '',
     choices: null, // [{ label, icon }] 或 null
     typing: false
+  },
+
+  // 相册
+  album: {
+    open: false,
+    key: ''
+  },
+
+  journal: {
+    open: false
   },
 
   // 顶部提示 toast
@@ -39,5 +57,5 @@ export const gameState = reactive({
     name: ''
   },
 
-  controlsHint: 'WASD / 方向键 移动 · 空格 / E 互动'
+  controlsHint: 'WASD / 方向键 移动 · 空格 / E 互动 · F 敲开树石'
 })

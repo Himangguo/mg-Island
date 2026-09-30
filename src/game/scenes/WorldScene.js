@@ -1,6 +1,6 @@
 import Phaser from 'phaser'
-import { createIsland, TILE_SIZE, MAP_W, MAP_H, tileToWorld, LANDMARKS } from '../maps'
-import { LANDMARK_ICON_FRAME } from '../assets'
+import { createIsland, TILE_SIZE, MAP_W, MAP_H, tileToWorld, LANDMARKS, LANDMARK_LABELS } from '../maps'
+import { LANDMARK_ICON_FRAME, TILE } from '../assets'
 import { CONTENT } from '../content'
 import { DialogRunner } from '../DialogRunner'
 import { eventBus, EVT } from '../eventBus'
@@ -49,6 +49,7 @@ export default class WorldScene extends Phaser.Scene {
     this.cursors = this.input.keyboard.createCursorKeys()
     this.wasd = this.input.keyboard.addKeys('W,A,S,D')
     this.interactKey = this.input.keyboard.addKeys('SPACE,E')
+    this.breakKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F)
 
     // 提示气泡
     this.prompt = this.add
@@ -57,8 +58,34 @@ export default class WorldScene extends Phaser.Scene {
       .setDepth(50)
       .setVisible(false)
 
+    this.guideArrow = this.add
+      .text(480, 54, '↑', {
+        fontFamily: 'monospace',
+        fontSize: '30px',
+        color: '#ffd76a',
+        stroke: '#0e0a0b',
+        strokeThickness: 4
+      })
+      .setOrigin(0.5)
+      .setScrollFactor(0)
+      .setDepth(100)
+      .setVisible(false)
+    this.guideLabel = this.add
+      .text(480, 84, '', {
+        fontFamily: 'sans-serif',
+        fontSize: '12px',
+        color: '#f5eede',
+        backgroundColor: '#20181a',
+        padding: { x: 9, y: 5 }
+      })
+      .setOrigin(0.5)
+      .setScrollFactor(0)
+      .setDepth(100)
+      .setVisible(false)
+
     this.interactables = []
     this.buildInteractables()
+    this.catGuide = null
 
     // 姓名提示对象：只在收集满时由 Vue 显示，这里不处理
     this.pendingMini = null
@@ -78,7 +105,10 @@ export default class WorldScene extends Phaser.Scene {
     // 入场提示
     this.time.delayedCall(600, () => {
       if (gameState.phase === 'playing') {
-        eventBus.emit(EVT.TOAST, { text: '你来到了一座小岛。四处逛逛吧。', kind: 'info' })
+        eventBus.emit(EVT.TOAST, {
+          text: '左上角的「发现手记」可以随时回顾你找到的线索。',
+          kind: 'info'
+        })
       }
     })
   }
@@ -116,14 +146,16 @@ export default class WorldScene extends Phaser.Scene {
 
   update(time, delta) {
     this.updatePrompts()
-    if (gameState.phase !== 'playing') {
+    if (gameState.phase !== 'playing' || gameState.dialogue.open) {
       this.player.setVelocity(0)
       this.player.anims.stop()
+      this.setGuideVisible(false)
       return
     }
 
     this.handleMovement()
     this.handleInteraction()
+    this.handleBreak()
     this.updateCat(delta)
   }
 
@@ -177,6 +209,51 @@ export default class WorldScene extends Phaser.Scene {
     }
   }
 
+  handleBreak() {
+    if (!Phaser.Input.Keyboard.JustDown(this.breakKey)) return
+    const target = this.breakableInFront()
+    if (!target) return
+
+    const { tile, tileX, tileY } = target
+    const x = (tileX + 0.5) * TILE_SIZE
+    const y = (tileY + 0.5) * TILE_SIZE
+    const color = tile.index === TILE.stone ? 0xb3ada4 : 0x79c143
+
+    for (let i = 0; i < 7; i++) {
+      const chip = this.add.rectangle(x, y, 4, 4, color).setDepth(12)
+      this.tweens.add({
+        targets: chip,
+        x: x + Phaser.Math.Between(-20, 20),
+        y: y + Phaser.Math.Between(-18, 12),
+        alpha: 0,
+        scale: 0.35,
+        duration: 260,
+        ease: 'Quad.out',
+        onComplete: () => chip.destroy()
+      })
+    }
+
+    this.ground.putTileAt(TILE.grass, tileX, tileY)
+    this.cameras.main.shake(80, 0.002)
+  }
+
+  breakableInFront() {
+    const direction =
+      this.facing === 'up'
+        ? { x: 0, y: -1 }
+        : this.facing === 'down'
+          ? { x: 0, y: 1 }
+          : { x: this.flipX ? -1 : 1, y: 0 }
+    const centerY = this.player.y - this.player.displayHeight / 2
+    const tileX = Math.floor((this.player.x + direction.x * (TILE_SIZE + 2)) / TILE_SIZE)
+    const tileY = Math.floor((centerY + direction.y * (TILE_SIZE + 2)) / TILE_SIZE)
+    const tile = this.ground.getTileAt(tileX, tileY)
+    const breakable = [TILE.tree, TILE.bush, TILE.stone]
+
+    if (!tile || !breakable.includes(tile.index)) return null
+    return { tile, tileX, tileY }
+  }
+
   nearest() {
     let best = null
     let bestD = Infinity
@@ -191,6 +268,9 @@ export default class WorldScene extends Phaser.Scene {
   }
 
   handleInteract(it) {
+    if (it.kind === 'gem' && !gameState.exploredLandmarks.includes(it.key)) {
+      gameState.exploredLandmarks.push(it.key)
+    }
     if (it.kind === 'me' && gameState.fragments.length >= gameState.totalFragments) {
       gameState.phase = 'reveal'
       return
@@ -199,9 +279,18 @@ export default class WorldScene extends Phaser.Scene {
   }
 
   updatePrompts() {
+    const obstacle = this.breakableInFront()
+    if (obstacle && !gameState.dialogue.open) {
+      this.prompt
+        .setText('F')
+        .setPosition((obstacle.tileX + 0.5) * TILE_SIZE, (obstacle.tileY + 0.5) * TILE_SIZE - 16)
+        .setVisible(true)
+      return
+    }
+
     const near = this.nearest()
     if (near && !gameState.dialogue.open && !gameState.dialogue.choices) {
-      this.prompt.setPosition(near.x, near.y - 26).setVisible(true)
+      this.prompt.setText('E').setPosition(near.x, near.y - 26).setVisible(true)
     } else {
       this.prompt.setVisible(false)
     }
@@ -209,6 +298,46 @@ export default class WorldScene extends Phaser.Scene {
 
   updateCat(delta) {
     if (!this.cat) return
+
+    if (this.catGuide && gameState.exploredLandmarks.includes(this.catGuide.target.key)) {
+      this.catGuide = null
+      this.setGuideVisible(false)
+    }
+
+    if (this.catGuide) {
+      const { target, label } = this.catGuide
+      const playerDx = target.x - this.player.x
+      const playerDy = target.y - this.player.y
+      const playerDistance = Math.hypot(playerDx, playerDy)
+      const catDx = target.x - this.cat.x
+      const catDy = target.y - this.cat.y
+      const catDistance = Math.hypot(catDx, catDy)
+
+      this.guideArrow
+        .setRotation(Math.atan2(playerDy, playerDx) + Math.PI / 2)
+        .setVisible(true)
+      this.guideLabel.setVisible(true)
+
+      if (playerDistance < 24) {
+        this.catGuide = null
+        this.setGuideVisible(false)
+        eventBus.emit(EVT.TOAST, {
+          text: `豆泡带你到了「${label}」附近，按 E 完成探索。`,
+          kind: 'info'
+        })
+      } else if (catDistance > 10) {
+        const speed = 62
+        this.cat.x += (catDx / catDistance) * speed * (delta / 1000)
+        this.cat.y += (catDy / catDistance) * speed * (delta / 1000)
+        this.cat.setFrame(1)
+        this.cat.setFlipX(catDx < 0)
+        this.syncCatEntry()
+        return
+      } else {
+        this.cat.setFrame(0)
+      }
+    }
+
     const dx = this.player.x - this.cat.x
     const dy = this.player.y - this.cat.y
     const d = Math.hypot(dx, dy)
@@ -223,11 +352,46 @@ export default class WorldScene extends Phaser.Scene {
     if (this.cat.x > this.player.x) this.cat.setFlipX(false)
     else if (this.cat.x < this.player.x) this.cat.setFlipX(true)
 
-    // 同步互动点的坐标，让「喵」的交互跟随到猫当前的位置
-    if (this.catEntry) {
-      this.catEntry.x = this.cat.x
-      this.catEntry.y = this.cat.y
+    this.syncCatEntry()
+  }
+
+  startCatGuide() {
+    if (this.catGuide) {
+      eventBus.emit(EVT.TOAST, { text: '豆泡正在带路，沿着箭头跟上它吧。', kind: 'info' })
+      return
     }
+
+    const candidates = this.interactables.filter(
+      (item) => item.kind === 'gem' && !gameState.exploredLandmarks.includes(item.key)
+    )
+    if (!candidates.length) {
+      eventBus.emit(EVT.TOAST, { text: '豆泡绕着你转了一圈：这座岛已经都逛过啦。', kind: 'info' })
+      return
+    }
+
+    candidates.sort(
+      (a, b) =>
+        Phaser.Math.Distance.Between(this.player.x, this.player.y, a.x, a.y) -
+        Phaser.Math.Distance.Between(this.player.x, this.player.y, b.x, b.y)
+    )
+    const target = candidates[0]
+    const label = LANDMARK_LABELS[target.key] || target.key
+    this.catGuide = { target, label }
+    this.guideLabel.setText(`豆泡带路 · ${label}`)
+    this.guideArrow.setVisible(true)
+    this.guideLabel.setVisible(true)
+    eventBus.emit(EVT.TOAST, { text: `豆泡出发了：跟着箭头去「${label}」看看。`, kind: 'info' })
+  }
+
+  setGuideVisible(visible) {
+    this.guideArrow.setVisible(visible)
+    this.guideLabel.setVisible(visible)
+  }
+
+  syncCatEntry() {
+    if (!this.catEntry) return
+    this.catEntry.x = this.cat.x
+    this.catEntry.y = this.cat.y
   }
 
   startMini(id, onSuccess, onFail) {

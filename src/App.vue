@@ -7,6 +7,8 @@
     <TitleScreen v-if="gameState.phase === 'title'" @start="startGame" />
     <Hud v-if="gameState.phase === 'playing'" />
     <DialogueBox />
+    <AlbumViewer />
+    <DiscoveryJournal />
     <Toast />
     <Finale v-if="gameState.phase === 'reveal' || gameState.phase === 'ending'" />
   </div>
@@ -21,6 +23,8 @@ import { music } from './game/audio'
 import TitleScreen from './components/TitleScreen.vue'
 import Hud from './components/Hud.vue'
 import DialogueBox from './components/DialogueBox.vue'
+import AlbumViewer from './components/AlbumViewer.vue'
+import DiscoveryJournal from './components/DiscoveryJournal.vue'
 import Toast from './components/Toast.vue'
 import Finale from './components/Finale.vue'
 

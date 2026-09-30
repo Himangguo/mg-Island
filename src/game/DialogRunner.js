@@ -28,6 +28,8 @@ export class DialogRunner {
     this.nodes = []
     gameState.dialogue.open = false
     gameState.dialogue.choices = null
+    gameState.album.open = false
+    gameState.album.key = ''
   }
 
   close() {
@@ -49,6 +51,17 @@ export class DialogRunner {
 
       if (node.choices) {
         this._choices(node.choices)
+        return
+      }
+
+      if (node.album) {
+        this._album(node.album)
+        return
+      }
+
+      if (node.guide) {
+        this.scene.startCatGuide()
+        this.close()
         return
       }
 
@@ -85,6 +98,9 @@ export class DialogRunner {
     eventBus.once(EVT.DIALOGUE_CHOICE, ({ index }) => {
       gameState.dialogue.choices = null
       const chosen = options[index]
+      if (chosen && chosen.remember) {
+        gameState.profile[chosen.remember.key] = chosen.remember.value
+      }
       if (chosen && chosen.do) {
         const rest = this.nodes.slice(this.i)
         this.nodes = [...chosen.do, ...rest]
@@ -92,6 +108,16 @@ export class DialogRunner {
       }
       this.step()
     })
+  }
+
+  _album(id) {
+    gameState.dialogue.open = false
+    gameState.dialogue.choices = null
+    gameState.album.open = true
+    gameState.album.key = id
+    gameState.phase = 'album'
+    eventBus.emit(EVT.ALBUM_OPEN, { id })
+    eventBus.once(EVT.ALBUM_CLOSE, () => this.step())
   }
 
   _mini(id) {

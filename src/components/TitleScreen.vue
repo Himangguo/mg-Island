@@ -10,7 +10,7 @@
         最后，找到他的名字。
       </p>
       <button class="start-btn" @click="$emit('start')">进入岛屿</button>
-      <p class="hint">WASD / 方向键 移动 · 空格 / E 互动</p>
+      <p class="hint">WASD / 方向键 移动 · 空格 / E 互动 · F 敲开树石</p>
     </div>
   </div>
 </template>

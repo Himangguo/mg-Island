@@ -21,7 +21,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { gameState } from '../game/state'
 import { eventBus, EVT } from '../game/eventBus'
 
@@ -38,37 +38,35 @@ function clearTimer() {
 }
 
 watch(
-  () => gameState.dialogue.text,
-  (t) => {
-    clearTimer()
-    if (t == null) {
-      display.value = ''
-      full.value = ''
-      typing.value = false
-      return
-    }
-    full.value = t
-    typing.value = true
-    let i = 1
-    display.value = t.slice(0, i)
-    timer = setInterval(() => {
-      i++
-      display.value = t.slice(0, i)
-      if (i >= t.length) {
-        clearTimer()
-        typing.value = false
-      }
-    }, 22)
-  }
-)
-
-watch(
-  () => gameState.dialogue.open,
-  (o) => {
-    if (!o) {
+  () => [gameState.dialogue.open, gameState.dialogue.text],
+  ([isOpen, text], [wasOpen, previousText]) => {
+    if (!isOpen) {
       clearTimer()
       typing.value = false
       display.value = ''
+      return
+    }
+
+    if (!wasOpen || text !== previousText) {
+      clearTimer()
+      if (text == null) {
+        display.value = ''
+        full.value = ''
+        typing.value = false
+        return
+      }
+      full.value = text
+      typing.value = true
+      let i = 1
+      display.value = text.slice(0, i)
+      timer = setInterval(() => {
+        i++
+        display.value = text.slice(0, i)
+        if (i >= text.length) {
+          clearTimer()
+          typing.value = false
+        }
+      }, 22)
     }
   }
 )
@@ -87,7 +85,22 @@ function choose(i) {
   eventBus.emit(EVT.DIALOGUE_CHOICE, { index: i })
 }
 
-onBeforeUnmount(clearTimer)
+function onKeydown(event) {
+  const isSpace = event.code === 'Space' || event.key === ' ' || event.key === 'Spacebar'
+  if (!isSpace || event.repeat) return
+  if (!gameState.dialogue.open || choices.value) return
+  event.preventDefault()
+  advance()
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', onKeydown)
+})
+
+onBeforeUnmount(() => {
+  clearTimer()
+  window.removeEventListener('keydown', onKeydown)
+})
 </script>
 
 <style scoped>
