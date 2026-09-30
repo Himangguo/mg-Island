@@ -17,8 +17,8 @@ export const gameState = reactive({
   // 兴趣森林：滑板 / 吉他 / 游泳 / 健身 是否已完成
   interests: [],
 
-  // 已经实际互动过的地标，用于豆泡选择探索目标
-  exploredLandmarks: [],
+  // 已满足内容目标的地标
+  completedLandmarks: [],
 
   // 玩家选择后，留下会影响后续手记的个人线索
   profile: {

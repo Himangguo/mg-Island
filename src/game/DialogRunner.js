@@ -1,6 +1,7 @@
 import { gameState } from './state'
 import { eventBus, EVT } from './eventBus'
 import { grantFragment, completeInterest } from './progress'
+import { LANDMARKS } from './maps'
 
 // 对话脚本解释器：把 CONTENT 里的节点数组逐步执行，驱动 Vue 对话 UI 与小游戏
 export class DialogRunner {
@@ -11,11 +12,13 @@ export class DialogRunner {
     this.i = 0
     this.currentSpeaker = ''
     this.miniResult = null
+    this.landmark = null
   }
 
   run(id) {
     const script = this.scene.content[id]
     if (!script) return
+    this.landmark = LANDMARKS.find((item) => item.key === id) || null
     this.nodes = script.map((node) => {
       if (!node.sayByProfile) return node
       const text =
@@ -35,6 +38,7 @@ export class DialogRunner {
   abort() {
     this.active = false
     this.nodes = []
+    this.landmark = null
     gameState.dialogue.open = false
     gameState.dialogue.choices = null
     gameState.album.open = false
@@ -43,8 +47,28 @@ export class DialogRunner {
 
   close() {
     this.active = false
+    this.landmark = null
     gameState.dialogue.open = false
     gameState.dialogue.choices = null
+  }
+
+  finish() {
+    const completion = this.landmark?.completion
+    const goalMet =
+      !completion ||
+      (completion.fragment && gameState.fragments.includes(completion.fragment)) ||
+      (completion.interest && gameState.interests.includes(completion.interest))
+
+    if (
+      this.landmark &&
+      goalMet &&
+      !gameState.completedLandmarks.includes(this.landmark.key)
+    ) {
+      const key = this.landmark.key
+      gameState.completedLandmarks.push(key)
+      this.scene.markLandmarkComplete?.(key)
+    }
+    this.close()
   }
 
   step() {
@@ -96,11 +120,11 @@ export class DialogRunner {
       }
 
       if (node.end) {
-        this.close()
+        this.finish()
         return
       }
     }
-    this.close()
+    this.finish()
   }
 
   _say(text) {

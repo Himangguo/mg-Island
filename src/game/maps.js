@@ -42,21 +42,21 @@ export const SOLID = new Set([
   'waterDeep'
 ])
 
-// 可交互点（宝石）的位置（tile 坐标）。地图生成时会强制清空为可通行。
+// 可交互点的位置与完成条件；有奖励目标的地点必须拿到奖励才算完成。
 export const LANDMARKS = [
-  { key: 'home_bed', tx: 10, ty: 11 },
+  { key: 'home_bed', tx: 10, ty: 11, completion: { fragment: 'zhou_2' } },
   { key: 'home_album', tx: 17, ty: 10 },
-  { key: 'ei_stone', tx: 20, ty: 17 },
-  { key: 'studio', tx: 39, ty: 11 },
-  { key: 'studio_tech', tx: 33, ty: 7 },
-  { key: 'rain_mountain', tx: 28, ty: 4 },
-  { key: 'skate', tx: 13, ty: 1 },
-  { key: 'guitar', tx: 20, ty: 1 },
-  { key: 'swim', tx: 5, ty: 30 },
+  { key: 'ei_stone', tx: 20, ty: 17, completion: { fragment: 'zhou_3' } },
+  { key: 'studio', tx: 39, ty: 11, completion: { fragment: 'xue_1' } },
+  { key: 'studio_tech', tx: 33, ty: 7, completion: { fragment: 'xue_3' } },
+  { key: 'rain_mountain', tx: 28, ty: 4, completion: { fragment: 'xue_2' } },
+  { key: 'skate', tx: 13, ty: 1, completion: { interest: 'skate' } },
+  { key: 'guitar', tx: 20, ty: 1, completion: { interest: 'guitar' } },
+  { key: 'swim', tx: 5, ty: 30, completion: { interest: 'swim' } },
   { key: 'water_note', tx: 40, ty: 30 },
-  { key: 'fitness', tx: 30, ty: 20 },
-  { key: 'arcade', tx: 8, ty: 22 },
-  { key: 'yunnan', tx: 43, ty: 26 },
+  { key: 'fitness', tx: 30, ty: 20, completion: { interest: 'fitness' } },
+  { key: 'arcade', tx: 8, ty: 22, completion: { fragment: 'chen_2' } },
+  { key: 'yunnan', tx: 43, ty: 26, completion: { fragment: 'chen_3' } },
   { key: 'record', tx: 37, ty: 24 },
   { key: 'library', tx: 15, ty: 24 }
 ]

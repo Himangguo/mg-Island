@@ -21,7 +21,7 @@
         姓名碎片 {{ gameState.fragments.length }} / {{ gameState.totalFragments }}
       </div>
       <div class="exploration">
-        地点探索 {{ gameState.exploredLandmarks.length }} / {{ LANDMARKS.length }}
+        探索完成 {{ gameState.completedLandmarks.length }} / {{ LANDMARKS.length }}
       </div>
       <div class="pips">
         <span

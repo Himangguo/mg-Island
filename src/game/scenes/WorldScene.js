@@ -124,7 +124,7 @@ export default class WorldScene extends Phaser.Scene {
     // 像素图标（内容交互点）
     for (const lm of LANDMARKS) {
       const pos = tileToWorld(lm.tx, lm.ty)
-      const explored = gameState.exploredLandmarks.includes(lm.key)
+      const completed = gameState.completedLandmarks.includes(lm.key)
       const icon = this.add.sprite(0, 0, 'landmarks', LANDMARK_ICON_FRAME[lm.key])
       const marker = this.add.container(6, -6)
       const badge = this.add.circle(0, 0, 4.5, 0xffd36a).setStrokeStyle(1, 0x20181a)
@@ -136,7 +136,7 @@ export default class WorldScene extends Phaser.Scene {
       check.lineTo(2, -2)
       check.strokePath()
       marker.add([badge, check])
-      marker.setVisible(explored)
+      marker.setVisible(completed)
 
       const visual = this.add.container(pos.x, pos.y, [icon, marker]).setDepth(3)
       this.tweens.add({ targets: visual, y: pos.y - 2, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.inOut' })
@@ -328,15 +328,16 @@ export default class WorldScene extends Phaser.Scene {
   }
 
   handleInteract(it) {
-    if (it.kind === 'gem' && !gameState.exploredLandmarks.includes(it.key)) {
-      gameState.exploredLandmarks.push(it.key)
-      it.marker?.setVisible(true)
-    }
     if (it.kind === 'me' && gameState.fragments.length >= gameState.totalFragments) {
       gameState.phase = 'reveal'
       return
     }
     this.dialog.run(it.dialogKey)
+  }
+
+  markLandmarkComplete(key) {
+    const landmark = this.interactables.find((item) => item.key === key)
+    landmark?.marker?.setVisible(true)
   }
 
   updatePrompts() {
@@ -360,7 +361,7 @@ export default class WorldScene extends Phaser.Scene {
   updateCat(delta) {
     if (!this.cat) return
 
-    if (this.catGuide && gameState.exploredLandmarks.includes(this.catGuide.target.key)) {
+    if (this.catGuide && gameState.completedLandmarks.includes(this.catGuide.target.key)) {
       this.catGuide = null
       this.setGuideVisible(false)
     }
@@ -438,10 +439,10 @@ export default class WorldScene extends Phaser.Scene {
     }
 
     const candidates = this.interactables.filter(
-      (item) => item.kind === 'gem' && !gameState.exploredLandmarks.includes(item.key)
+      (item) => item.kind === 'gem' && !gameState.completedLandmarks.includes(item.key)
     )
     if (!candidates.length) {
-      eventBus.emit(EVT.TOAST, { text: '豆泡绕着你转了一圈：这座岛已经都逛过啦。', kind: 'info' })
+      eventBus.emit(EVT.TOAST, { text: '豆泡绕着你转了一圈：这座岛上的探索都完成啦。', kind: 'info' })
       return
     }
 
