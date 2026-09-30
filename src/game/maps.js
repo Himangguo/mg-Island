@@ -29,7 +29,7 @@ const LEGEND = {
   monitor: TILE.monitor
 }
 
-// 可碰撞（固体）tile 名称
+// 深水仍是边界；浅水开放通行，供玩家下水探索
 export const SOLID = new Set([
   'wall',
   'roof',
@@ -39,7 +39,6 @@ export const SOLID = new Set([
   'bush',
   'stone',
   'fence',
-  'water',
   'waterDeep'
 ])
 
@@ -53,7 +52,7 @@ export const LANDMARKS = [
   { key: 'rain_mountain', tx: 28, ty: 4 },
   { key: 'skate', tx: 13, ty: 1 },
   { key: 'guitar', tx: 20, ty: 1 },
-  { key: 'swim', tx: 5, ty: 28 },
+  { key: 'swim', tx: 5, ty: 30 },
   { key: 'fitness', tx: 30, ty: 20 },
   { key: 'arcade', tx: 8, ty: 22 },
   { key: 'yunnan', tx: 43, ty: 26 },
@@ -172,6 +171,7 @@ function buildGrid() {
 
   // 清空交互点所在 tile（保证可达、醒目）
   for (const l of LANDMARKS) {
+    if (l.key === 'swim') continue // 游泳镜浮在浅水上，保留水面外观
     stamp(g, l.tx, l.ty, 1, 1, 'path')
   }
 

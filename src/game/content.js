@@ -300,7 +300,7 @@ export const CONTENT = {
   ],
 
   swim: [
-    { speaker: '你', say: '海边放着一副游泳镜。' },
+    { speaker: '你', say: '泳池里放着一副游泳镜。' },
     { say: '（游到 50 米试试？）' },
     {
       choices: [
@@ -313,7 +313,7 @@ export const CONTENT = {
             { interest: 'swim' }
           ]
         },
-        { text: '不下水', do: [{ say: '海水有点凉。' }] }
+        { text: '不下水', do: [{ say: '池水看起来有点凉。' }] }
       ]
     }
   ],

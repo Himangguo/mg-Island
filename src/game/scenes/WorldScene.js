@@ -7,6 +7,7 @@ import { eventBus, EVT } from '../eventBus'
 import { gameState } from '../state'
 
 const IDLE_FRAME = { down: 0, up: 2, side: 4 }
+const SWIM_FRAME = { down: 6, up: 8, side: 10 }
 
 export default class WorldScene extends Phaser.Scene {
   constructor() {
@@ -41,9 +42,15 @@ export default class WorldScene extends Phaser.Scene {
     this.anims.create({ key: 'p-down', frames: fr('player', 0, 1), frameRate: 6, repeat: -1 })
     this.anims.create({ key: 'p-up', frames: fr('player', 2, 3), frameRate: 6, repeat: -1 })
     this.anims.create({ key: 'p-side', frames: fr('player', 4, 5), frameRate: 6, repeat: -1 })
+    this.anims.create({ key: 'p-swim-down', frames: fr('player', 6, 7), frameRate: 5, repeat: -1 })
+    this.anims.create({ key: 'p-swim-up', frames: fr('player', 8, 9), frameRate: 5, repeat: -1 })
+    this.anims.create({ key: 'p-swim-side', frames: fr('player', 10, 11), frameRate: 5, repeat: -1 })
+    this.anims.create({ key: 'cat-swim', frames: fr('cat', 2, 3), frameRate: 4, repeat: -1 })
 
     this.facing = 'down'
     this.flipX = false
+    this.lastWaterRippleAt = 0
+    this.poolIntroShown = false
 
     // 输入
     this.cursors = this.input.keyboard.createCursorKeys()
@@ -153,13 +160,13 @@ export default class WorldScene extends Phaser.Scene {
       return
     }
 
-    this.handleMovement()
+    this.handleMovement(delta)
     this.handleInteraction()
     this.handleBreak()
     this.updateCat(delta)
   }
 
-  handleMovement() {
+  handleMovement(delta) {
     const c = this.cursors
     const k = this.wasd
     const left = c.left.isDown || k.A.isDown
@@ -186,20 +193,59 @@ export default class WorldScene extends Phaser.Scene {
       if (!left && !right) this.facing = 'down'
     }
 
-    const speed = 95
+    const swimming = this.isSwimming()
+    const speed = swimming ? 82 : 95
     if (vx !== 0 && vy !== 0) {
       vx *= 0.7071
       vy *= 0.7071
+    }
+    if (swimming) {
+      this.player.setTint(0xb8e9f7)
+      if (!this.poolIntroShown) {
+        this.poolIntroShown = true
+        eventBus.emit(EVT.TOAST, {
+          text: '浅水区可以自由游动，找到游泳镜按 E 开始 50 米挑战。',
+          kind: 'info'
+        })
+      }
+      if ((vx !== 0 || vy !== 0) && this.time.now - this.lastWaterRippleAt > 240) {
+        this.makeWaterRipple()
+        this.lastWaterRippleAt = this.time.now
+      }
+    } else {
+      this.player.clearTint()
     }
     this.player.setVelocity(vx * speed, vy * speed)
     this.player.setFlipX(this.flipX)
 
     if (vx !== 0 || vy !== 0) {
-      this.player.play(`p-${this.facing}`, true)
+      this.player.play(`${swimming ? 'p-swim' : 'p'}-${this.facing}`, true)
     } else {
       this.player.anims.stop()
-      this.player.setTexture('player', IDLE_FRAME[this.facing])
+      this.player.setTexture('player', swimming ? SWIM_FRAME[this.facing] : IDLE_FRAME[this.facing])
     }
+  }
+
+  isSwimming() {
+    return this.isSwimmingAt(this.player.x, this.player.y)
+  }
+
+  isSwimmingAt(x, y) {
+    const tileX = Math.floor(x / TILE_SIZE)
+    const tileY = Math.floor((y - 1) / TILE_SIZE)
+    return this.ground.getTileAt(tileX, tileY)?.index === TILE.water
+  }
+
+  makeWaterRipple() {
+    const ripple = this.add.ellipse(this.player.x, this.player.y - 2, 7, 3, 0xcaf5ff, 0.72).setDepth(9)
+    this.tweens.add({
+      targets: ripple,
+      scaleX: 2.2,
+      scaleY: 1.6,
+      alpha: 0,
+      duration: 340,
+      onComplete: () => ripple.destroy()
+    })
   }
 
   handleInteraction() {
@@ -329,12 +375,11 @@ export default class WorldScene extends Phaser.Scene {
         const speed = 62
         this.cat.x += (catDx / catDistance) * speed * (delta / 1000)
         this.cat.y += (catDy / catDistance) * speed * (delta / 1000)
-        this.cat.setFrame(1)
-        this.cat.setFlipX(catDx < 0)
+        this.setCatPose(true, catDx)
         this.syncCatEntry()
         return
       } else {
-        this.cat.setFrame(0)
+        this.setCatPose(false, catDx)
       }
     }
 
@@ -345,14 +390,30 @@ export default class WorldScene extends Phaser.Scene {
       const speed = 60
       this.cat.x += (dx / d) * speed * (delta / 1000)
       this.cat.y += (dy / d) * speed * (delta / 1000)
-      this.cat.setFrame(1)
+      this.setCatPose(true, dx)
     } else {
-      this.cat.setFrame(0)
+      this.setCatPose(false, dx)
     }
-    if (this.cat.x > this.player.x) this.cat.setFlipX(false)
-    else if (this.cat.x < this.player.x) this.cat.setFlipX(true)
 
     this.syncCatEntry()
+  }
+
+  setCatPose(moving, dx) {
+    const swimming = this.isSwimmingAt(this.cat.x, this.cat.y)
+    if (swimming) {
+      if (Math.abs(dx) > 1) this.cat.setFlipX(dx < 0)
+      if (moving) this.cat.play('cat-swim', true)
+      else {
+        this.cat.anims.stop()
+        this.cat.setFrame(2)
+      }
+      return
+    }
+
+    this.cat.anims.stop()
+    this.cat.setFrame(moving ? 1 : 0)
+    if (dx > 0) this.cat.setFlipX(false)
+    else if (dx < 0) this.cat.setFlipX(true)
   }
 
   startCatGuide() {

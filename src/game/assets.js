@@ -260,6 +260,60 @@ function chibiCanvases(opts) {
   ).flat()
 }
 
+function drawSwimChibi(ctx, o) {
+  const { hair, shirtDark, shirt, skin, facing, frame } = o
+  const strokeY = frame === 0 ? 7 : 10
+
+  if (facing === 'side') {
+    r(ctx, 9, 5, 5, 6, skin)
+    r(ctx, 9, 3, 6, 3, hair)
+    r(ctx, 14, 4, 1, 7, hair)
+    p(ctx, 12, 7, '#2a2a33')
+    r(ctx, 4, 6, 5, 5, shirt)
+    r(ctx, 4, 10, 5, 1, shirtDark)
+    r(ctx, 6, strokeY, 4, 2, skin)
+    r(ctx, 2, 7, 3, 2, shirtDark)
+    r(ctx, 2, 9, 3, 2, skin)
+    r(ctx, frame === 0 ? 1 : 2, 6, 3, 2, shirtDark)
+    return
+  }
+
+  if (facing === 'up') {
+    r(ctx, 3, 0, 10, 5, hair)
+    r(ctx, 4, 3, 8, 5, skin)
+    r(ctx, 3, 1, 1, 6, hair)
+    r(ctx, 12, 1, 1, 6, hair)
+    r(ctx, 5, 7, 6, 6, shirt)
+    r(ctx, 5, 9, 6, 1, shirtDark)
+    r(ctx, 5, 13, 2, 3, shirtDark)
+    r(ctx, 9, 13, 2, 3, shirtDark)
+  } else {
+    r(ctx, 4, 10, 8, 6, skin)
+    r(ctx, 3, 13, 10, 4, hair)
+    r(ctx, 3, 10, 1, 6, hair)
+    r(ctx, 12, 10, 1, 6, hair)
+    p(ctx, 6, 12, '#2a2a33')
+    p(ctx, 10, 12, '#2a2a33')
+    r(ctx, 5, 5, 6, 6, shirt)
+    r(ctx, 5, 7, 6, 1, shirtDark)
+    r(ctx, 5, 1, 2, 3, shirtDark)
+    r(ctx, 9, 1, 2, 3, shirtDark)
+  }
+
+  r(ctx, 0, strokeY, 5, 2, skin)
+  r(ctx, 11, strokeY, 5, 2, skin)
+}
+
+function swimCanvases(opts) {
+  return ['down', 'up', 'side'].flatMap((facing) =>
+    [0, 1].map((frame) => {
+      const c = makeCanvas(CHAR_W, CHAR_H)
+      drawSwimChibi(ctx2d(c), { ...opts, facing, frame })
+      return c
+    })
+  )
+}
+
 // ---------- 猫（银渐层「豆泡」，16x16） ----------
 const CAT_W = 16
 const CAT_H = 16
@@ -288,6 +342,35 @@ function drawCat(ctx, frame) {
   // 尾巴
   r(ctx, 13, 4, 2, 3, coatDark)
   r(ctx, 13, 6, 3, 1, coatDark)
+}
+
+function drawSwimmingCat(ctx, frame) {
+  const coat = '#dcd8d1'
+  const coatDark = '#b3ada4'
+
+  // Low, stretched body with the head leading and paws alternating through the water.
+  r(ctx, 0, 7, 4, 2, coatDark)
+  r(ctx, 1, 5, 2, 2, coatDark)
+  r(ctx, 3, 5, 8, 7, coat)
+  r(ctx, 5, 11, 5, 2, coatDark)
+  r(ctx, 9, 4, 6, 7, coat)
+  r(ctx, 10, 2, 2, 4, coat)
+  r(ctx, 14, 2, 2, 4, coat)
+  p(ctx, 10, 3, '#f0a0a0')
+  p(ctx, 14, 3, '#f0a0a0')
+  p(ctx, 12, 7, '#5a8a3a')
+  p(ctx, 14, 7, '#5a8a3a')
+  p(ctx, 15, 9, '#f0a0a0')
+
+  if (frame === 0) {
+    r(ctx, 7, 2, 2, 4, coatDark)
+    r(ctx, 10, 11, 2, 4, coat)
+    r(ctx, 2, 11, 3, 2, coatDark)
+  } else {
+    r(ctx, 7, 11, 2, 4, coatDark)
+    r(ctx, 10, 1, 2, 4, coat)
+    r(ctx, 2, 4, 3, 2, coatDark)
+  }
 }
 
 // ---------- 可交互点「宝石」标记（16x16） ----------
@@ -508,12 +591,13 @@ export function generateAssets(scene) {
   scene.textures.addCanvas('tiles', tilesCanvas)
 
   // 玩家（6 帧：down0/1 up0/1 side0/1）
-  const playerFrames = chibiCanvases({
+  const playerOpts = {
     hair: '#40332b',
     shirt: PALETTE.shirt,
     shirtDark: '#3789c0',
     skin: PALETTE.skin
-  })
+  }
+  const playerFrames = [...chibiCanvases(playerOpts), ...swimCanvases(playerOpts)]
   addSheet(scene, 'player', playerFrames, CHAR_W, CHAR_H)
 
   // NPC「角色」（神秘人，暖色卫衣）
@@ -526,9 +610,11 @@ export function generateAssets(scene) {
   addSheet(scene, 'npc', npcFrames.slice(0, 2), CHAR_W, CHAR_H)
 
   // 猫
-  const catFrames = [0, 1].map((f) => {
+  const catFrames = [0, 1, 2, 3].map((f) => {
     const c = makeCanvas(CAT_W, CAT_H)
-    drawCat(ctx2d(c), f)
+    const ctx = ctx2d(c)
+    if (f < 2) drawCat(ctx, f)
+    else drawSwimmingCat(ctx, f - 2)
     return c
   })
   addSheet(scene, 'cat', catFrames, CAT_W, CAT_H)
