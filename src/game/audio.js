@@ -35,21 +35,24 @@ export const NOTES = {
   'Si+': 987.77 // 7'
 }
 
-// 单声道旋律（频率 Hz），一个轻快的 C 大调 16 步 loop
+// 明亮的大调五声音阶旋律，保留少量空拍让节奏轻盈不拥挤
 const MELODY = [
-  523.25, 659.25, 783.99, 659.25, // C5 E5 G5 E5
-  880.0, 783.99, 659.25, 523.25, // A5 G5 E5 C5
-  698.46, 587.33, 659.25, 783.99, // F5 D5 E5 G5
-  659.25, 587.33, 523.25, 392.0 // E5 D5 C5 G4
+  523.25, 659.25, 587.33, 523.25, 392.0, 523.25, 659.25, null,
+  587.33, 659.25, 783.99, 659.25, 587.33, 523.25, 440.0, null,
+  523.25, 659.25, 783.99, 659.25, 587.33, 659.25, 783.99, null,
+  659.25, 587.33, 523.25, 440.0, 523.25, 392.0, 523.25, null
 ]
 
-const STEP_MS = 220
-const VOLUME = 0.05
-const NOTE_LEN = 0.2
+const STEP_MS = 330
+const BGM_GAIN = 0.95
+const NOTE_VOLUME = 0.06
+const NOTE_LEN = 0.24
 
 class Music {
   constructor() {
     this.ctx = null
+    this.bgmFilter = null
+    this.bgmGain = null
     this.timer = null
     this.step = 0
   }
@@ -57,7 +60,16 @@ class Music {
   ensureCtx() {
     if (!this.ctx) {
       const AC = window.AudioContext || window.webkitAudioContext
-      if (AC) this.ctx = new AC()
+      if (AC) {
+        this.ctx = new AC()
+        this.bgmFilter = this.ctx.createBiquadFilter()
+        this.bgmFilter.type = 'lowpass'
+        this.bgmFilter.frequency.value = 1800
+        this.bgmGain = this.ctx.createGain()
+        this.bgmGain.gain.value = audioState.muted ? 0.0001 : BGM_GAIN
+        this.bgmFilter.connect(this.bgmGain)
+        this.bgmGain.connect(this.ctx.destination)
+      }
     }
     if (this.ctx && this.ctx.state === 'suspended') {
       this.ctx.resume()
@@ -67,23 +79,33 @@ class Music {
 
   playNote(freq) {
     const ctx = this.ctx
-    if (!ctx || audioState.muted) return
+    if (!ctx || !freq || audioState.muted) return
     const now = ctx.currentTime
 
     const osc = ctx.createOscillator()
     const gain = ctx.createGain()
 
-    osc.type = 'square'
+    osc.type = 'triangle'
     osc.frequency.value = freq
 
-    gain.gain.setValueAtTime(VOLUME, now)
+    gain.gain.setValueAtTime(0.0001, now)
+    gain.gain.linearRampToValueAtTime(NOTE_VOLUME, now + 0.025)
     gain.gain.exponentialRampToValueAtTime(0.0001, now + NOTE_LEN)
 
     osc.connect(gain)
-    gain.connect(ctx.destination)
+    gain.connect(this.bgmFilter)
 
     osc.start(now)
     osc.stop(now + NOTE_LEN + 0.02)
+  }
+
+  setBgmGain(value, duration = 0.25) {
+    if (!this.ctx || !this.bgmGain) return
+    const now = this.ctx.currentTime
+    const gain = this.bgmGain.gain
+    gain.cancelScheduledValues(now)
+    gain.setValueAtTime(gain.value, now)
+    gain.linearRampToValueAtTime(value, now + duration)
   }
 
   start() {
@@ -91,11 +113,13 @@ class Music {
     if (!this.ensureCtx()) return
 
     audioState.playing = true
+    this.setBgmGain(audioState.muted ? 0.0001 : BGM_GAIN, 0.7)
     this.step = 0
 
     const tick = () => {
       if (!audioState.playing) return
-      this.playNote(MELODY[this.step % MELODY.length])
+      const loopStep = this.step % MELODY.length
+      this.playNote(MELODY[loopStep])
       this.step++
     }
 
@@ -105,6 +129,7 @@ class Music {
 
   stop() {
     audioState.playing = false
+    this.setBgmGain(0.0001, 0.35)
     if (this.timer) {
       clearInterval(this.timer)
       this.timer = null
@@ -113,6 +138,7 @@ class Music {
 
   toggleMute() {
     audioState.muted = !audioState.muted
+    this.setBgmGain(audioState.muted ? 0.0001 : BGM_GAIN, 0.12)
     return audioState.muted
   }
 
